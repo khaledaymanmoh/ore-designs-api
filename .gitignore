@@ -28,3 +28,6 @@ temp/
 # Ignore lock files (optional, depending on team preference)
 package-lock.json
 yarn.lock
+
+# Prisma Migrations
+prisma/migrations

@@ -1,0 +1,109 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  user_id           Int        @id @default(autoincrement())
+  role_id           Int
+  username          String
+  first_name        String
+  last_name         String
+  phone             String
+  address           String?
+  password          String
+  email             String     @unique
+  isEmployee        Boolean
+  created_at        DateTime   @default(now())
+  last_modified_at  DateTime   @default(now())
+  lastModifiedById  Int?
+  lastModifiedBy    User?      @relation("UserLastModifiedBy", fields: [lastModifiedById], references: [user_id])
+  roleUser          Role       @relation("RoleUser", fields: [role_id], references: [role_id])
+  modifiedUsers     User[]     @relation("UserLastModifiedBy")
+  comments          Comment[]  @relation("UserComments")
+  comments_modify   Comment[]  @relation("CommentModifyUser")
+  updates           Update[]   @relation("UpdateUserUpdate")
+  UpdateUser        Update[]   @relation("UpdateUser")
+  properties        Property?  @relation("PropertyOwner")
+  property_engineer Property?  @relation("PropertyEmployee")
+  property_modify   Property[] @relation("ModifyUserProperty")
+  role              Role?      @relation("RoleUserModify")
+}
+
+model Role {
+  role_id                   Int      @id @default(autoincrement())
+  role_name                 String
+  json_access               Json     @default("{}")
+  description               String?
+  last_modified_at          DateTime @default(now())
+  last_modified_by          Int      @unique()
+  last_modified_by_employee User     @relation("RoleUserModify", fields: [last_modified_by], references: [user_id])
+  users                     User[]   @relation("RoleUser")
+}
+
+model Property {
+  property_id               Int      @id @default(autoincrement())
+  address                   String
+  governorate               String?
+  city                      String?
+  country                   String   @default("Egypt")
+  owner_id                  Int      @unique
+  user_id                   Int      @unique
+  last_modified_at          DateTime @default(now())
+  last_modified_by          Int
+  updates                   Update[]
+  owner                     User     @relation("PropertyOwner", fields: [owner_id], references: [user_id])
+  employee                  User     @relation("PropertyEmployee", fields: [user_id], references: [user_id])
+  last_modified_by_employee User     @relation("ModifyUserProperty", fields: [last_modified_by], references: [user_id])
+}
+
+model Update {
+  update_id             Int       @id @default(autoincrement())
+  userId                Int
+  property_id           Int?
+  update_text           String?
+  updated_at            DateTime  @default(now())
+  last_modified_at      DateTime  @default(now())
+  last_modified_by      Int
+  property              Property? @relation(fields: [property_id], references: [property_id])
+  user                  User      @relation("UpdateUser", fields: [userId], references: [user_id])
+  last_modified_by_user User      @relation("UpdateUserUpdate", fields: [last_modified_by], references: [user_id])
+  Comment               Comment[] @relation("CommentUpdateUser")
+}
+
+model Comment {
+  comment_id            Int      @id @default(autoincrement())
+  update_id             Int
+  user_id               Int
+  comment_text          String?
+  commented_at          DateTime @default(now())
+  last_modified_at      DateTime @default(now())
+  last_modified_by      Int
+  update                Update   @relation("CommentUpdateUser", fields: [update_id], references: [update_id])
+  user                  User     @relation("UserComments", fields: [user_id], references: [user_id])
+  last_modified_by_user User     @relation("CommentModifyUser", fields: [last_modified_by], references: [user_id])
+}
+
+// model Employee {
+//   employee_id               Int        @id @default(autoincrement())
+//   first_name                String
+//   last_name                 String
+//   department                String?
+//   role_id                   Int
+//   last_modified_at          DateTime   @default(now())
+//   last_modified_by          Int?
+//   created_at                DateTime   @default(now())
+//   role                      Role       @relation(fields: [role_id], references: [role_id])
+//   last_modified_by_employee Employee?  @relation("EmployeeModifications", fields: [last_modified_by], references: [employee_id])
+//   properties                Property[] @relation("EmployeeProperties")
+//   updates                   Update[]   @relation("EmployeeUpdates")
+//   comments                  Comment[]
+//   Role                      Role[]     @relation("RoleModifications")
+//   Employee                  Employee[] @relation("EmployeeModifications")
+//   Property                  Property[]
+//   Property_modified_by      Property[] @relation("PropertyModifications")
+// }
